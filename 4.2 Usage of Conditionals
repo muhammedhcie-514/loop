@@ -1,0 +1,123 @@
+4.2.1 Comparison Operations in a Playbook
+Example: Print all the IP addresses of the controlled host client-1.
+Write a playbook as follows:
+- hosts: all
+ gather_facts: true
+ tasks:
+ - debug:
+ msg: ip address of Client-1 is "{{ ansible_all_ipv4_addresses }}"
+ when: ansible_hostname == "client-1"
+Execute the playbook. The following information is displayed.
+ansible-playbook ip.yml
+
+4.2.2 Logical Operation in a Playbook
+Example: Print all the IP addresses of the controlled host client-1 with Ansible 2.9.27
+used.
+Write a playbook as follows:
+- hosts: all
+ gather_facts: true
+ tasks:
+ - debug:
+ msg: ip address of Client-1 is "{{ ansible_all_ipv4_addresses }}"
+ when: ansible_hostname == "client-1" and ansible_version.full == "2.9.27"
+Execute the playbook. The following information is displayed.
+ansible-playbook ip2.yml
+
+4.2.3 Path Determination in a Playbook
+Example: Copy the /home/test file of the controller to the controlled host.
+Write a playbook as follows:
+- hosts: all
+ gather_facts: true
+ tasks:
+ - name: create a file
+ copy:
+ src: /home/test
+ dest: /home/test
+ when: "'/home/test' is exists"
+
+
+
+
+Execute the playbook is executed. The following information is displayed.
+
+ansible-playbook test.yml
+
+Create a /home/test directory on the controller.
+[root@controller yaml]# touch /home/test
+[root@controller yaml]# ls /home
+openeuler test
+
+ansible-playbook test.yml
+
+
+4.2.4 Task Execution Result Determination in a Playbook
+Example: Create a /tmp/test file on the controller. If the file is successfully created, the
+message "mission is success" is displayed.
+Write a playbook as follows:
+- hosts: all
+ gather_facts: true
+ tasks:
+ - name: create a file
+ copy:
+ src: /home/test/
+ dest: /home/test/
+ register: returnmsg
+ - name: result
+ debug:
+ msg: "mission is success"
+ when: "returnmsg is success"
+
+ansible-playbook test1.yml
+
+⚫ Question: If the condition is changed to when: "returnmsg is changed", can the
+message "mission is success" be returned?
+⚫ Answer: No. The file has been created in a previous section. Therefore, the changed
+condition cannot be met. The execution result is as follows.
+
+
+
+4.2.5 Usage of Block
+Example 1: Install httpd on the controlled host client-1 and disable the firewalld service.
+Write a playbook as follows:
+- hosts: all
+ gather_facts: true
+ tasks:
+ - block:
+ - name: install httpd
+ yum:
+ name: httpd
+ state: present
+ - name: stop firewalld
+ service:
+ name: firewalld
+ state: stopped
+ when: ansible_hostname == "client-1"
+Execute the playbook. The following information is displayed.
+ansible-playbook httpd.yml
+
+
+Example 2: Install httpd-test on the controlled host client-1 and disable the firewalld
+service. If the installation fails, the message "installation is faild" is displayed.
+Write a playbook as follows:
+- hosts: all
+ gather_facts: true
+ tasks:
+ - block:
+ - name: install httpd
+ yum:
+ name: httpd-test
+ state: present
+ rescue:
+ - debug:
+ msg: "installation is faild"
+ always:
+ - name: stop firewalld
+ service:
+ name: firewalld
+ state: stopped
+ when: ansible_hostname == "client-1"
+Execute the playbook. The following information is displayed.
+ansible-playbook httpd.yml
+
+
+

@@ -1,0 +1,39 @@
+4.3 Usage of Loop Statements
+Example: Create a user information file as the administrator as follows:
+user:
+ - name: zhangsan
+ department: sale
+ uid: 1100
+ - name: lisi
+ department: sale
+ uid: 1101
+ - name: wangwu
+ department: technology
+ uid: 1102
+Create users for all hosts based on this file. name is the user name, department is the
+user information, and uid is the user ID. A user password consists of eight randomly
+generated digits, encrypted using sha512 and saved in the /root/yaml directory. A
+password file is named "password-<name>", where <name> indicates the user name.
+Write a playbook as follows:
+- hosts: all
+ gather_facts: false
+ vars_files:
+ /root/yaml/username
+ tasks:
+- name: create user
+ user:
+ name: "{{ item.name }}"
+ comment: "{{ item.department }}"
+ uid: "{{ item.uid }}"
+ password: "{{ lookup('password','/root/yaml/password-{{ item.name }} chars=digits
+length=8') | password_hash('sha512') }}"
+ loop: "{{ user }}"
+
+
+Execute the playbook. The following information is displayed.
+ansible-playbook user.yml
+⚫ Task: After the execution is complete, check whether corresponding password files
+are generated and whether users are created.
+
+
+
